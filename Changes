@@ -2,3 +2,7 @@ Revision history for Google::Plus
 
 {{$NEXT}}
 
+0.001   2011-09-18
+        Initial release
+        Can retrieve profile info into Google::Plus::Person
+
