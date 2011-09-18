@@ -1,7 +1,7 @@
 package Google::Plus;
 use Mojo::Base -base;
 
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 use Google::Plus::Person;
 
@@ -62,6 +62,8 @@ Google::Plus - simple interface to Google+
 This module lets you access Google+ people profiles and activities from
 Perl.  Currently, only access to public data is supported.
 
+This module is B<alpha> software, use at your own risk.
+
 =head1 ATTRIBUTES
 
 =head2 key
@@ -95,6 +97,11 @@ which you can get at L<https://code.google.com/apis/console>.
   my $p = $plus->person('userId');
 
 Get a Google+ person's profile.  Returns a L<Google::Plus::Person> object.
+
+=head2 DEVELOPMENT
+
+This project is hosted on Github, at
+L<https://github.com/zakame/perl-google-plus>.
 
 =head1 AUTHOR
 
