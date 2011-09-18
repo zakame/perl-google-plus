@@ -72,25 +72,37 @@ Numeric user ID, e.g. C<112708775709583792684>.
 
 =head2 about_me
 
+  my $about = $person->about_me;
+
 Short biography of this person.
 
 =head2 display_name
+
+  my $name = $person->display_name;
 
 Name of person, suitable for display.
 
 =head2 image
 
+  my $image = $person->image;
+
 URL of this person's profile photo.
 
 =head2 gender
+
+  my $gender = $person->gender;
 
 Person's gender.
 
 =head2 tag_line
 
+  my $tagline = $person->tag_line;
+
 Brief description (tagline) of this person.
 
 =head2 url
+
+  my $url = $person->url;
 
 URL of this person's profile,
 e.g. L<https://plus.google.com/112708775709583792684/posts>.
