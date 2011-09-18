@@ -1,6 +1,8 @@
 Revision history for Google::Plus
 
 {{$NEXT}}
+        Add some docs to Google::Plus::Person
+        Put in *alpha* software warning
 
 0.001   2011-09-18
         Initial release
