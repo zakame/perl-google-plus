@@ -1,8 +1,6 @@
 package Google::Plus;
 use Mojo::Base -base;
 
-our $VERSION = '0.002';
-
 use Google::Plus::Person;
 
 use Mojo::UserAgent;
@@ -27,15 +25,18 @@ sub person {
   my ($self, $user_id) = @_;
 
   croak 'user ID required' unless $user_id;
+  croak 'Invalid user ID' unless $user_id =~ /[0-9]+/;
 
   my $key  = $self->key;
-  my $json = $self->ua->get(
+  my $ua   = $self->ua;
+
+  my $json = $ua->get(
     "https://www.googleapis.com/plus/v1/people/$user_id?key=$key"
   )->res->json;
 
   croak $json->{error}->{message} unless $json->{kind};
 
-  return Google::Plus::Person->new($user_id, $json, $key, $self->ua);
+  return Google::Plus::Person->new($json, $key, $ua);
 }
 
 "Inspired by tempire's Google::Voice :3";
@@ -66,14 +67,14 @@ This module is B<alpha> software, use at your own risk.
 
 =head1 ATTRIBUTES
 
-=head2 key
+=head2 C<key>
 
   my $key = $plus->key;
   my $key = $plus->key('xxxxNEWKEYxxxx');
 
 Google+ API key, used for retrieving content.  Usually set using L</new>.
 
-=head2 ua
+=head2 C<ua>
 
   my $ua = $plus->ua;
   my $ua = $plus->ua(Mojo::UserAgent->new);
@@ -85,14 +86,14 @@ Defaults to a L<Mojo::UserAgent> object.
 
 L<Google::Plus> implements the following methods:
 
-=head2 new
+=head2 C<new>
 
   my $plus = Google::Plus->new(key => $google_plus_api_key);
 
 Construct a new L<Google::Plus> object.  Needs a valid Google+ API key,
 which you can get at L<https://code.google.com/apis/console>.
 
-=head2 person
+=head2 C<person>
 
   my $p = $plus->person('userId');
 
@@ -114,3 +115,4 @@ This software is Copyright (c) 2011, Zak B. Elep.
 This is free software, you can redistribute it and/or modify it under
 the same terms as Perl itself.
 
+=cut

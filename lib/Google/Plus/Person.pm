@@ -3,33 +3,17 @@ use Mojo::Base -base;
 
 use Carp;
 
-has [
-  qw/about_me display_name gender image organizations
-    places_lived tag_line url urls id key json ua/
-];
+has [qw/id gender image organizations tagline url urls key ua/];
+
+has about_me     => sub { $_[0]->{aboutMe} };
+has display_name => sub { $_[0]->{displayName} };
+has places_lived => sub { $_[0]->{placesLived} };
 
 sub new {
-  my $self = bless {}, shift;
-  my ($user_id, $json, $key, $ua) = @_;
+  my ($class, $json, $key, $ua) = @_;
+  my $self = bless $json => $class;
 
-  $self->json($json);
   $self->key($key);
-  $self->about_me($json->{aboutMe});
-  $self->display_name($json->{displayName});
-  $self->gender($json->{gender});
-
-  # $self->image(Google::Plus::Person::Image->new($json->{image}, $ua));
-  $self->image($json->{image});
-
-  # $self->organizations(
-  #   Google::Plus::Organizations->new($json->{organizations}, $ua));
-  # $self->places_lived(
-  #   Google::Plus::Person::Places->new($json->{places_lived}, $ua));
-  $self->tag_line($json->{tag_line});
-  $self->url($json->{url});
-
-  # $self->urls(Google::Plus::Person::URLs->new($json->{urls}, $ua));
-  $self->id($json->{id});
   $self->ua($ua);
 
   return $self;
@@ -64,48 +48,66 @@ L<http://developers.google.com/+/api/latest/people>.
 
 L<Google::Plus::Person> implements the following attributes:
 
-=head2 id
-
-  my $id = $person->id;
-
-Numeric user ID, e.g. C<112708775709583792684>.
-
-=head2 about_me
+=head2 C<about_me>
 
   my $about = $person->about_me;
 
 Short biography of this person.
 
-=head2 display_name
+=head2 C<display_name>
 
   my $name = $person->display_name;
 
 Name of person, suitable for display.
 
-=head2 image
-
-  my $image = $person->image;
-
-URL of this person's profile photo.
-
-=head2 gender
+=head2 C<gender>
 
   my $gender = $person->gender;
 
 Person's gender.
 
-=head2 tag_line
+=head2 C<id>
 
-  my $tagline = $person->tag_line;
+  my $id = $person->id;
+
+Numeric user ID, e.g. C<112708775709583792684>.
+
+=head2 C<image>
+
+  my $image = $person->image;
+
+URL of this person's profile photo.
+
+=head2 C<organizations>
+
+  my @organizations = $person->organizations;
+
+List of organizations this person is a member of.
+
+=head2 C<places_lived>
+
+  my @places_lived = $person->places_lived;
+
+List of current and previous places this person lived in.
+
+=head2 C<tagline>
+
+  my $tagline = $person->tagline;
 
 Brief description (tagline) of this person.
 
-=head2 url
+=head2 C<url>
 
   my $url = $person->url;
 
 URL of this person's profile,
 e.g. L<https://plus.google.com/112708775709583792684/posts>.
+
+=head2 C<urls>
+
+  my @urls = $person->urls;
+
+List of URLs associated with this person.
 
 =head1 METHODS
 
@@ -113,11 +115,10 @@ L<Google::Plus::Person> implements the following methods:
 
 =head2 new
 
-  my $person = Google::Plus::Person->new($user_id, $json, $key, $ua);
+  my $person = Google::Plus::Person->new($hashref);
 
-Construct a new L<Google::Plus::Person> object from the given user ID.
-If given a hash reference holding profile information, populate the
-object's attributes with it.
+Construct a new L<Google::Plus::Person> object from the given hashref
+(typically output from L<Mojo::JSON>.)
 
 =head1 SEE ALSO
 

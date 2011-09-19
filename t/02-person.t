@@ -1,37 +1,40 @@
 #!/usr/bin/env perl
 use Test::Most;
 use Mojo::UserAgent;
+use Net::Ping;
 
-use Google::Plus::Person;
+BEGIN {
+  plan skip_all => 'Needs Google+ API key in %ENV'
+    unless $ENV{GOOGLE_PLUS_API_KEY};
 
-my $id   = '1337';
-my $json = {
-  id => $id,
-  aboutMe => 'Something to test with.',
-  displayName => 'Foo Bar Baz',
-  gender => 'mail',
-  image => {url => 'http://some/nonexistent/image.jpg'},
-  kind => 'plus#person',
-  organizations => {},
-  placesLived => {},
-  tagLine => 'Live long, and prosper',
-  url => 'http://plus.google.com/1337/posts',
-  urls => {},
-};
-my $key = 'invalid';
-my $ua  = Mojo::UserAgent->new;
+  my $p = Net::Ping->new('syn', 2);
+  $p->port_number(getservbyname(https => 'tcp'));
+  $p->service_check(1);
+  plan skip_all => 'Needs access to remote Google API endpoint'
+    unless $p->ping('www.googleapis.com');
+}
+
+# Google+Zak
+my $user_id = '112708775709583792684';
+
+my $key = $ENV{GOOGLE_PLUS_API_KEY};
+
+use Google::Plus;
+
+my $g = Google::Plus->new(key => $key);
+
+can_ok 'Google::Plus::Person' => 'new';
+
+my $p = $g->person($user_id);
+isa_ok $p => 'Google::Plus::Person';
+
+ok $p->$_, "$_ exists"
+  for qw/ about_me display_name gender id image organizations places_lived
+  tagline url urls key ua /;
 
 TODO: {
   local $TODO = 'test driven development!';
 
-  can_ok 'Google::Plus::Person' => 'new';
-
-  my $p = Google::Plus::Person->new($id, $json, $key, $ua);
-  isa_ok $p => 'Google::Plus::Person';
-
-  ok $p->$_, "Profile detail $_ exists"
-    for qw/id about_me display_name gender image organizations
-    places_lived tag_line url urls id key json ua/;
 }
 
 done_testing;
