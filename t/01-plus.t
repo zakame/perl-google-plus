@@ -49,6 +49,24 @@ subtest 'get person profile' => sub {
   };
 };
 
+my $a;
+subtest 'get person activities' => sub {
+  can_ok $g => 'activities';
+
+  throws_ok { $g->activities } qr/ID.+required/, 'needs user ID';
+  throws_ok { $g->activities('foo') } qr/Invalid/, 'user ID must be numeric';
+  throws_ok { $g->activities('00000000000000000000') } qr/unable to map/,
+    'bad person';
+
+  my $a = $g->activities($user_id);
+  isa_ok $a => 'HASH';
+
+  subtest 'activity list properties' => sub {
+    ok $a->{$_}, "$_ exists"
+      for qw/ id items nextLink nextPageToken selfLink title updated /;
+  };
+};
+
 TODO: {
   local $TODO = 'test driven development!';
 

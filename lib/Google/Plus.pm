@@ -36,6 +36,25 @@ sub person {
   return $json;
 }
 
+sub activities {
+  my ($self, $user_id) = @_;
+
+  croak 'user ID required' unless $user_id;
+  croak 'Invalid user ID' unless $user_id =~ /[0-9]+/;
+
+  my $key = $self->key;
+  my $ua  = $self->ua;
+  my $url = join '?',
+    "https://www.googleapis.com/plus/v1/people/$user_id/activities/public",
+      "key=$key";
+
+  my $json = $ua->get($url)->res->json;
+
+  croak $json->{error}->{message} unless $json->{kind};
+
+  return $json;
+}
+
 "Inspired by tempire's Google::Voice :3";
 
 __END__
@@ -95,6 +114,12 @@ which you can get at L<https://code.google.com/apis/console>.
   my $p = $plus->person('userId');
 
 Get a Google+ person's public profile.  Returns a L<JSON> decoded hashref.
+
+=head2 C<activities>
+
+  my $a = $plus->activities('userId');
+
+Get person's list of public activities.  Returns a L<JSON> decoded hashref.
 
 =head2 DEVELOPMENT
 
