@@ -3,6 +3,7 @@ Revision history for Google::Plus
 {{$NEXT}}
         Add tests and fixes
         Remove Person (be refactored later)
+        Add getting person's activities
 
 0.002   2011-09-18
         Add some docs to Google::Plus::Person
