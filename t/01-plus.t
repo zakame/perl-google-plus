@@ -7,38 +7,50 @@ BEGIN {
     unless $ENV{GOOGLE_PLUS_API_KEY};
 
   my $p = Net::Ping->new('syn', 2);
-  $p->port_number(getservbyname(https => 'tcp'));
+  $p->port_number(scalar getservbyname(https => 'tcp'));
   $p->service_check(1);
   plan skip_all => 'Needs access to remote Google API endpoint'
     unless $p->ping('www.googleapis.com');
 }
 
+use Google::Plus;
+
 # Google+Zak
 my $user_id = '112708775709583792684';
 
-use Google::Plus;
+my $g;
+subtest 'create object' => sub {
+  can_ok 'Google::Plus' => 'new';
+  throws_ok { Google::Plus->new } qr/key.+required/, 'needs API key';
+  throws_ok { Google::Plus->new(blah => 'ther') } qr/key.+required/,
+    'bad key';
 
-can_ok 'Google::Plus' => 'new';
+  $g = Google::Plus->new(key => $ENV{GOOGLE_PLUS_API_KEY});
+  ok ref $g => 'Made object';
+  isa_ok $g => 'Google::Plus';
+};
 
-throws_ok { Google::Plus->new } qr/key.+required/, 'needs API key';
-throws_ok { Google::Plus->new(blah => 'ther') } qr/key.+required/, 'bad key';
+my $p;
+subtest 'get person profile' => sub {
+  can_ok $g => 'person';
 
-my $g = Google::Plus->new(key => $ENV{GOOGLE_PLUS_API_KEY});
-isa_ok $g => 'Google::Plus';
+  throws_ok { $g->person } qr/ID.+required/, 'needs user ID';
+  throws_ok { $g->person('foo') } qr/Invalid/, 'user ID must be numeric';
+  throws_ok { $g->person('00000000000000000000') } qr/unable to map/,
+    'bad person';
 
-can_ok $g => 'person';
+  my $p = $g->person($user_id);
+  isa_ok $p => 'HASH';
 
-throws_ok { $g->person } qr/ID.+required/, 'needs user ID';
-throws_ok { $g->person('foo') } qr/Invalid/, 'user ID must be numeric';
-throws_ok { $g->person('00000000000000000000') } qr/unable to map/,
-  'bad person';
-
-my $p = $g->person($user_id);
-isa_ok $p => 'Google::Plus::Person';
+  subtest 'person properties' => sub {
+    ok $p->{$_}, "$_ exists"
+      for qw/ aboutMe displayName gender id image organizations placesLived
+      tagline url urls /;
+  };
+};
 
 TODO: {
   local $TODO = 'test driven development!';
-
 
 }
 

@@ -1,10 +1,7 @@
 package Google::Plus;
 use Mojo::Base -base;
 
-use Google::Plus::Person;
-
 use Mojo::UserAgent;
-use Mojo::JSON;
 use IO::Socket::SSL 1.37;
 use Carp;
 
@@ -27,8 +24,8 @@ sub person {
   croak 'user ID required' unless $user_id;
   croak 'Invalid user ID' unless $user_id =~ /[0-9]+/;
 
-  my $key  = $self->key;
-  my $ua   = $self->ua;
+  my $key = $self->key;
+  my $ua  = $self->ua;
 
   my $json = $ua->get(
     "https://www.googleapis.com/plus/v1/people/$user_id?key=$key"
@@ -36,7 +33,7 @@ sub person {
 
   croak $json->{error}->{message} unless $json->{kind};
 
-  return Google::Plus::Person->new($json, $key, $ua);
+  return $json;
 }
 
 "Inspired by tempire's Google::Voice :3";
@@ -97,7 +94,7 @@ which you can get at L<https://code.google.com/apis/console>.
 
   my $p = $plus->person('userId');
 
-Get a Google+ person's profile.  Returns a L<Google::Plus::Person> object.
+Get a Google+ person's public profile.  Returns a L<JSON> decoded hashref.
 
 =head2 DEVELOPMENT
 
