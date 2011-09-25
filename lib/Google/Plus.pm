@@ -37,16 +37,18 @@ sub person {
 }
 
 sub activities {
-  my ($self, $user_id) = @_;
+  my ($self, $user_id, $next_token) = @_;
 
   croak 'user ID required' unless $user_id;
   croak 'Invalid user ID' unless $user_id =~ /[0-9]+/;
 
   my $key = $self->key;
   my $ua  = $self->ua;
-  my $url = join '?',
-    "https://www.googleapis.com/plus/v1/people/$user_id/activities/public",
-      "key=$key";
+  my $url =
+    "https://www.googleapis.com/plus/v1/people/$user_id/activities/public?";
+
+  $url = join '', $url => "pageToken=$next_token&" if $next_token;
+  $url = join '', $url => "key=$key";
 
   my $json = $ua->get($url)->res->json;
 
@@ -71,13 +73,26 @@ Google::Plus - simple interface to Google+
   my $plus = Google::Plus->new(key => $your_gplus_api_key);
 
   # get a person's profile
-  my $person = $plus->person('112708775709583792684');
-  say "Name: ", $person->display_name;
+  my $user_id = '112708775709583792684';
+  my $person  = $plus->person($user_id);
+  say "Name: ", $person->{displayName};
+
+  # get this person's activities
+  my $activities = $plus->activities($user_id);
+  while ($activities->{nextPageToken}) {
+    my $next = $activities->{nextPageToken};
+    for my $item (@{$activities->{items}}) {
+      ...;
+    }
+    $activities = $plus->activities($user_id, $next);
+  }
 
 =head1 DESCRIPTION
 
 This module lets you access Google+ people profiles and activities from
-Perl.  Currently, only access to public data is supported.
+Perl.  Currently, only access to public data is supported; authenticated
+requests for C<me> and other private data will follow in a future
+release.
 
 This module is B<alpha> software, use at your own risk.
 
@@ -113,15 +128,36 @@ which you can get at L<https://code.google.com/apis/console>.
 
   my $p = $plus->person('userId');
 
-Get a Google+ person's public profile.  Returns a L<JSON> decoded hashref.
+Get a Google+ person's public profile.  Returns a L<Mojo::JSON> decoded
+hashref describing the person's profile in I<Portable Contacts> format.
 
 =head2 C<activities>
 
   my $a = $plus->activities('userId');
+  my $a = $plus->activities('userId', 'nextPageToken');
 
-Get person's list of public activities.  Returns a L<JSON> decoded hashref.
+Get person's list of public activities.  Returns a L<Mojo::JSON> decoded
+hashref describing the person's activities in I<Activity Streams>
+format.  If C<nextPageToken> is given, this method retrieves the next
+page of activities this person has.
 
-=head2 DEVELOPMENT
+=head1 SEE ALSO
+
+=over
+
+=item * L<Google+ API|http://developers.google.com/+/api>
+
+=item * L<Google+|https://plus.google.com>
+
+=item * L<Portable Contacts|http://portablecontacts.net>
+
+=item * L<Activity Streams|http://activitystrea.ms>
+
+=back
+
+=cut
+
+=head1 DEVELOPMENT
 
 This project is hosted on Github, at
 L<https://github.com/zakame/perl-google-plus>.
@@ -135,6 +171,6 @@ Zak B. Elep, C<zakame@cpan.org>
 This software is Copyright (c) 2011, Zak B. Elep.
 
 This is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+the same terms as Perl language system itself.
 
 =cut

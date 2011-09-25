@@ -11,6 +11,8 @@ BEGIN {
   $p->service_check(1);
   plan skip_all => 'Needs access to remote Google API endpoint'
     unless $p->ping('www.googleapis.com');
+
+  plan tests => 3;
 }
 
 use Google::Plus;
@@ -20,6 +22,8 @@ my $user_id = '112708775709583792684';
 
 my $g;
 subtest 'create object' => sub {
+  plan tests => 5;
+
   can_ok 'Google::Plus' => 'new';
   throws_ok { Google::Plus->new } qr/key.+required/, 'needs API key';
   throws_ok { Google::Plus->new(blah => 'ther') } qr/key.+required/,
@@ -30,8 +34,10 @@ subtest 'create object' => sub {
   isa_ok $g => 'Google::Plus';
 };
 
-my $p;
+my $person;
 subtest 'get person profile' => sub {
+  plan tests => 6;
+
   can_ok $g => 'person';
 
   throws_ok { $g->person } qr/ID.+required/, 'needs user ID';
@@ -39,18 +45,22 @@ subtest 'get person profile' => sub {
   throws_ok { $g->person('00000000000000000000') } qr/unable to map/,
     'bad person';
 
-  my $p = $g->person($user_id);
-  isa_ok $p => 'HASH';
+  $person = $g->person($user_id);
+  isa_ok $person => 'HASH';
 
   subtest 'person properties' => sub {
-    ok $p->{$_}, "$_ exists"
+    plan tests => 10;
+
+    ok $person->{$_}, "$_ exists"
       for qw/ aboutMe displayName gender id image organizations placesLived
       tagline url urls /;
   };
 };
 
-my $a;
+my $activities;
 subtest 'get person activities' => sub {
+  plan tests => 7;
+
   can_ok $g => 'activities';
 
   throws_ok { $g->activities } qr/ID.+required/, 'needs user ID';
@@ -58,11 +68,23 @@ subtest 'get person activities' => sub {
   throws_ok { $g->activities('00000000000000000000') } qr/unable to map/,
     'bad person';
 
-  my $a = $g->activities($user_id);
-  isa_ok $a => 'HASH';
+  $activities = $g->activities($user_id);
+  isa_ok $activities => 'HASH';
 
   subtest 'activity list properties' => sub {
-    ok $a->{$_}, "$_ exists"
+    plan tests => 7;
+
+    ok $activities->{$_}, "$_ in activity list exists"
+      for qw/ id items nextLink nextPageToken selfLink title updated /;
+  };
+
+  subtest 'next activity list' => sub {
+    plan tests => 8;
+
+    my $next = $g->activities($user_id, $activities->{nextPageToken});
+    isnt $next->{nextPageToken}, $activities->{nextPageToken},
+      'got new activity list (the next page)';
+    ok $next->{$_}, "$_ in next activity list exists"
       for qw/ id items nextLink nextPageToken selfLink title updated /;
   };
 };
@@ -71,5 +93,3 @@ TODO: {
   local $TODO = 'test driven development!';
 
 }
-
-done_testing;
