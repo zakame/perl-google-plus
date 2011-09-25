@@ -57,6 +57,24 @@ sub activities {
   return $json;
 }
 
+sub activity {
+  my ($self, $activity_id) = @_;
+
+  croak 'activity ID required' unless $activity_id;
+  croak 'Invalid activity ID' unless $activity_id =~ /\w+/;
+
+  my $key = $self->key;
+  my $ua  = $self->ua;
+  my $url =
+    "https://www.googleapis.com/plus/v1/activities/$activity_id?key=$key";
+
+  my $json = $ua->get($url)->res->json;
+
+  croak $json->{error}->{message} unless $json->{kind};
+
+  return $json;
+}
+
 "Inspired by tempire's Google::Voice :3";
 
 __END__
@@ -86,6 +104,11 @@ Google::Plus - simple interface to Google+
     }
     $activities = $plus->activities($user_id, $next);
   }
+
+  # get a specific activity
+  my $post = 'z13uxtsawqqwwbcjt04cdhsxcnfyir44xeg';
+  my $act  = $plus->activity($post);
+  say "Activity: ", $act->{title};
 
 =head1 DESCRIPTION
 
@@ -126,20 +149,30 @@ which you can get at L<https://code.google.com/apis/console>.
 
 =head2 C<person>
 
-  my $p = $plus->person('userId');
+  my $person = $plus->person('userId');
 
 Get a Google+ person's public profile.  Returns a L<Mojo::JSON> decoded
-hashref describing the person's profile in I<Portable Contacts> format.
+hashref describing the person's profile in L<Portable
+Contacts|http://portablecontacts.net/draft-spec.html> format.
 
 =head2 C<activities>
 
-  my $a = $plus->activities('userId');
-  my $a = $plus->activities('userId', 'nextPageToken');
+  my $acts = $plus->activities('userId');
+  my $acts = $plus->activities('userId', 'nextPageToken');
 
 Get person's list of public activities.  Returns a L<Mojo::JSON> decoded
-hashref describing the person's activities in I<Activity Streams>
-format.  If C<nextPageToken> is given, this method retrieves the next
-page of activities this person has.
+hashref describing the person's activities in L<Activity
+Streams|http://activitystrea.ms/specs/json/1.0> format.  If
+C<nextPageToken> is given, this method retrieves the next page of
+activities this person has.
+
+=head2 C<activity>
+
+  my $post = $plus->activity('activityId')
+
+Get a specific activity/post.  Returns a L<Mojo::JSON> decoded hashref
+describing the activity in L<Activity
+Streams|http://activitystrea.ms/specs/json/1.0> format.
 
 =head1 SEE ALSO
 
@@ -149,9 +182,9 @@ page of activities this person has.
 
 =item * L<Google+|https://plus.google.com>
 
-=item * L<Portable Contacts|http://portablecontacts.net>
+=item * L<Portable Contacts Spec|http://portablecontacts.net>
 
-=item * L<Activity Streams|http://activitystrea.ms>
+=item * L<Activity Streams Spec|http://activitystrea.ms>
 
 =back
 

@@ -12,7 +12,7 @@ BEGIN {
   plan skip_all => 'Needs access to remote Google API endpoint'
     unless $p->ping('www.googleapis.com');
 
-  plan tests => 3;
+  plan tests => 4;
 }
 
 use Google::Plus;
@@ -89,7 +89,28 @@ subtest 'get person activities' => sub {
   };
 };
 
-TODO: {
-  local $TODO = 'test driven development!';
+my $activity;
+subtest 'get activity' => sub {
+  plan tests => 6;
 
-}
+  # Google+ is the _vehicle_, Google Hangouts is the _product_.
+  my $post = 'z13uxtsawqqwwbcjt04cdhsxcnfyir44xeg';
+
+  can_ok $g => 'activity';
+
+  throws_ok { $g->activity } qr/ID.+required/, 'needs activity ID';
+  throws_ok { $g->activity('$!@$@#$') } qr/Invalid activity/, 'bad activity';
+  throws_ok { $g->activity('foobarbaz') } qr/Unable to find activity/,
+    'no activity named "foobarbaz"';
+
+  $activity = $g->activity($post);
+  isa_ok $activity => 'HASH';
+
+  subtest 'activity properties' => sub {
+    plan tests => 10;
+
+    ok $activity->{$_}, "activity property $_ exists"
+      for qw/ access actor annotation id object published title updated
+      url verb /;
+  };
+};
