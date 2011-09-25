@@ -1,6 +1,8 @@
 Revision history for Google::Plus
 
 {{$NEXT}}
+
+0.003   2011-09-26
         Add tests and fixes
         Remove Person (be refactored later)
         Add getting person's activities
