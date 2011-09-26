@@ -3,6 +3,8 @@ use Test::Most;
 use Net::Ping;
 
 BEGIN {
+  plan skip_all => 'these tests are not for smoke testing'
+    if $ENV{AUTOMATED_TESTING};
   plan skip_all => 'Needs Google+ API key in %ENV'
     unless $ENV{GOOGLE_PLUS_API_KEY};
 
