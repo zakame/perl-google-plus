@@ -29,9 +29,8 @@ subtest 'create object' => sub {
   throws_ok { Google::Plus->new(blah => 'ther') } qr/key.+required/,
     'bad key';
 
-  $g = Google::Plus->new(key => $ENV{GOOGLE_PLUS_API_KEY});
+  $g = new_ok 'Google::Plus', [key => $ENV{GOOGLE_PLUS_API_KEY}];
   ok ref $g => 'Made object';
-  isa_ok $g => 'Google::Plus';
 };
 
 my $person;
