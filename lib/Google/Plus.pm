@@ -7,6 +7,42 @@ use Carp;
 
 has [qw/key ua/];
 
+our $service = 'https://www.googleapis.com/plus/v1';
+
+our %API = (
+  person     => "$service/people/ID",
+  activities => "$service/people/ID/activities/public",
+  activity   => "$service/activities/ID"
+);
+
+sub _request {
+  my ($self, $url, $id, $args) = @_;
+
+  my $key = $self->key;
+  my $ua  = $self->ua;
+
+  $url = join '', $url, => '?';
+
+  # $args is a hashref corresponding to optional query parameters (such
+  # as nextPageToken)
+  if (ref $args eq 'HASH') {
+    my $frag = '';
+    for my $k (keys %$args) {
+      my $q = join '=', $k => "@{[$args->{$k}]}&";
+      $frag = join '', $frag => $q;
+    }
+    $url = join '', $url => $frag;
+  }
+  $url =~ s/ID/$id/;
+  $url = join '', $url => join '=', 'key' => $key;
+
+  my $json = $ua->get($url)->res->json;
+
+  die $json->{error}->{message} unless $json->{kind};
+
+  $json;
+}
+
 sub new {
   my $self = bless {}, shift;
 
@@ -15,7 +51,7 @@ sub new {
   $self->key($_[1]);
   $self->ua(Mojo::UserAgent->new);
 
-  return $self;
+  $self;
 }
 
 sub person {
@@ -24,37 +60,18 @@ sub person {
   croak 'user ID required' unless $user_id;
   croak 'Invalid user ID' unless $user_id =~ /[0-9]+/;
 
-  my $key = $self->key;
-  my $ua  = $self->ua;
-
-  my $json = $ua->get(
-    "https://www.googleapis.com/plus/v1/people/$user_id?key=$key"
-  )->res->json;
-
-  croak $json->{error}->{message} unless $json->{kind};
-
-  return $json;
+  $self->_request($API{person} => $user_id);
 }
 
 sub activities {
-  my ($self, $user_id, $next_token) = @_;
+  my ($self, $user_id, $next) = @_;
 
   croak 'user ID required' unless $user_id;
   croak 'Invalid user ID' unless $user_id =~ /[0-9]+/;
 
-  my $key = $self->key;
-  my $ua  = $self->ua;
-  my $url =
-    "https://www.googleapis.com/plus/v1/people/$user_id/activities/public?";
-
-  $url = join '', $url => "pageToken=$next_token&" if $next_token;
-  $url = join '', $url => "key=$key";
-
-  my $json = $ua->get($url)->res->json;
-
-  croak $json->{error}->{message} unless $json->{kind};
-
-  return $json;
+  $next
+    ? $self->_request($API{activities} => $user_id, {pageToken => $next})
+    : $self->_request($API{activities} => $user_id);
 }
 
 sub activity {
@@ -63,16 +80,7 @@ sub activity {
   croak 'activity ID required' unless $activity_id;
   croak 'Invalid activity ID' unless $activity_id =~ /\w+/;
 
-  my $key = $self->key;
-  my $ua  = $self->ua;
-  my $url =
-    "https://www.googleapis.com/plus/v1/activities/$activity_id?key=$key";
-
-  my $json = $ua->get($url)->res->json;
-
-  croak $json->{error}->{message} unless $json->{kind};
-
-  return $json;
+  $self->_request($API{activity} => $activity_id);
 }
 
 "Inspired by tempire's Google::Voice :3";
