@@ -190,9 +190,9 @@ Streams|http://activitystrea.ms/specs/json/1.0> format.
 
 =item * L<Google+|https://plus.google.com>
 
-=item * L<Portable Contacts Spec|http://portablecontacts.net>
+=item * L<Portable Contacts|http://portablecontacts.net>
 
-=item * L<Activity Streams Spec|http://activitystrea.ms>
+=item * L<Activity Streams|http://activitystrea.ms>
 
 =back
 
