@@ -1,6 +1,8 @@
 Revision history for Google::Plus
 
 {{$NEXT}}
+        Refactoring release
+        Perldoc and dist.ini minor fixes
 
 0.003   2011-09-26
         Add tests and fixes
