@@ -1,6 +1,7 @@
 package Google::Plus;
 use Mojo::Base -base;
 
+use Mojo::URL;
 use Mojo::UserAgent;
 use IO::Socket::SSL 1.37;
 use Carp;
@@ -10,31 +11,29 @@ has [qw/key ua/];
 our $service = 'https://www.googleapis.com/plus/v1';
 
 our %API = (
-  person     => "$service/people/ID",
-  activities => "$service/people/ID/activities/public",
-  activity   => "$service/activities/ID"
+  person     => '/people/ID',
+  activities => '/people/ID/activities/public',
+  activity   => '/activities/ID'
 );
 
 sub _request {
-  my ($self, $url, $id, $args) = @_;
+  my ($self, $api, $id, $args) = @_;
 
   my $key = $self->key;
   my $ua  = $self->ua;
 
-  $url = join '', $url, => '?';
+  $api =~ s/ID/$id/;
+
+  my $url = Mojo::URL->new(join '', $service => $api);
 
   # $args is a hashref corresponding to optional query parameters (such
   # as nextPageToken)
   if (ref $args eq 'HASH') {
-    my $frag = '';
-    for my $k (keys %$args) {
-      my $q = join '=', $k => "@{[$args->{$k}]}&";
-      $frag = join '', $frag => $q;
+    while (my ($k, $v) = each %$args) {
+      $url = $url->query({$k => $v});
     }
-    $url = join '', $url => $frag;
   }
-  $url =~ s/ID/$id/;
-  $url = join '', $url => join '=', 'key' => $key;
+  $url = $url->query({key => $key});
 
   my $json = $ua->get($url)->res->json;
 
