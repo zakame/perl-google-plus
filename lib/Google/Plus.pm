@@ -48,7 +48,7 @@ sub new {
   croak "API key required" unless $_[0] and $_[0] eq 'key';
 
   $self->key($_[1]);
-  $self->ua(Mojo::UserAgent->new);
+  $self->ua(Mojo::UserAgent->new->detect_proxy);
 
   $self;
 }
@@ -141,7 +141,9 @@ Google+ API key, used for retrieving content.  Usually set using L</new>.
   my $ua = $plus->ua(Mojo::UserAgent->new);
 
 User agent object that retrieves JSON from the Google+ API endpoint.
-Defaults to a L<Mojo::UserAgent> object.
+Defaults to a L<Mojo::UserAgent> object.  This object will use
+HTTP/HTTPS proxies when available (via C<HTTP_PROXY> and C<HTTPS_PROXY>
+environment variables.)
 
 =head1 METHODS
 
