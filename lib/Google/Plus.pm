@@ -203,7 +203,8 @@ Streams|http://activitystrea.ms/specs/json/1.0> format.
 =head1 DEVELOPMENT
 
 This project is hosted on Github, at
-L<https://github.com/zakame/perl-google-plus>.
+L<https://github.com/zakame/perl-google-plus>.  Post issues to L<CPAN
+RT|https://rt.cpan.org/Public/Dist/Display.html?Name=Google-Plus>.
 
 =head1 AUTHOR
 
