@@ -45,9 +45,12 @@ sub _request {
   my $tx = $ua->get($url);
   $tx->success and return $tx->res->json;
 
-  my ($message, $code) = $tx->error;
-  my $json_err = $tx->res->json->{error}->{message};
-  die "Error: $code $message ($json_err)";
+  my $message = $tx->error;
+  $tx->res->json and do {
+    my $json_err = $tx->res->json->{error}->{message};
+    $message = join ' ', $message => $json_err;
+  };
+  die "Error: $message";
 }
 
 sub new {
