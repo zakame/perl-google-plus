@@ -69,8 +69,21 @@ subtest 'get person activities' => sub {
   throws_ok { $g->activities('00000000000000000000') } qr/unable to map/,
     'bad person';
 
-  $activities = $g->activities($user_id);
-  isa_ok $activities => 'HASH';
+  subtest 'get person activities per collection' => sub {
+    plan tests => 3;
+
+    $activities = $g->activities($user_id);
+    isa_ok $activities => 'HASH', 'get activities (default public)';
+
+    $activities = $g->activities($user_id => 'public');
+    isa_ok $activities => 'HASH', 'get activities (explicit public)';
+
+  SKIP: {
+      skip 'no custom collections for activities/list yet', 1;
+      $activities = $g->activities($user_id => 'cats');
+      isa_ok $activities => 'HASH', 'get activities (custom collection)';
+    }
+  };
 
   subtest 'activity list properties' => sub {
     plan tests => 7;
@@ -82,7 +95,8 @@ subtest 'get person activities' => sub {
   subtest 'next activity list' => sub {
     plan tests => 8;
 
-    my $next = $g->activities($user_id, $activities->{nextPageToken});
+    my $next =
+      $g->activities($user_id => 'public', $activities->{nextPageToken});
     isnt $next->{nextPageToken}, $activities->{nextPageToken},
       'got new activity list (the next page)';
     ok $next->{$_}, "$_ in next activity list exists"

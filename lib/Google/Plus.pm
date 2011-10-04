@@ -1,5 +1,6 @@
 package Google::Plus;
 use Mojo::Base -base;
+use v5.10.1;
 
 use Mojo::URL;
 use Mojo::UserAgent;
@@ -12,7 +13,7 @@ our $service = 'https://www.googleapis.com/plus/v1';
 
 our %API = (
   person     => '/people/ID',
-  activities => '/people/ID/activities/public',
+  activities => '/people/ID/activities/COLLECTION',
   activity   => '/activities/ID'
 );
 
@@ -29,7 +30,13 @@ sub _request {
   # $args is a hashref corresponding to optional query parameters (such
   # as nextPageToken)
   if (ref $args eq 'HASH') {
-    while (my ($k, $v) = each %$args) {
+  PARAM: while (my ($k, $v) = each %$args) {
+      $k eq 'collection' and do {
+        my $p = $url->path->to_string;
+        $p =~ s/COLLECTION/$v/;
+        $url = $url->path($p);
+        next PARAM;
+      };
       $url = $url->query({$k => $v});
     }
   }
@@ -64,14 +71,17 @@ sub person {
 }
 
 sub activities {
-  my ($self, $user_id, $next) = @_;
+  my ($self, $user_id, $collection, $next) = @_;
 
   croak 'user ID required' unless $user_id;
   croak 'Invalid user ID' unless $user_id =~ /[0-9]+/;
 
-  $next
-    ? $self->_request($API{activities} => $user_id, {pageToken => $next})
-    : $self->_request($API{activities} => $user_id);
+  $collection //= 'public';
+
+  my %args = (collection => $collection);
+  $args{pageToken} = $next if $next;
+
+  $self->_request($API{activities} => $user_id, \%args);
 }
 
 sub activity {
@@ -168,11 +178,14 @@ Contacts|http://portablecontacts.net/draft-spec.html> format.
 =head2 C<activities>
 
   my $acts = $plus->activities('userId');
-  my $acts = $plus->activities('userId', 'nextPageToken');
+  my $acts = $plus->activities('userId', 'collection');
+  my $acts = $plus->activities('userId', 'collection', nextPageToken');
 
-Get person's list of public activities.  Returns a L<Mojo::JSON> decoded
-hashref describing the person's activities in L<Activity
+Get person's list of public activities, returning a L<Mojo::JSON>
+decoded hashref describing the person's activities in L<Activity
 Streams|http://activitystrea.ms/specs/json/1.0> format.  If
+C<collection> is given, use that as the collection of activities to
+list; the default is to list C<public> activities instead.  If
 C<nextPageToken> is given, this method retrieves the next page of
 activities this person has.
 
