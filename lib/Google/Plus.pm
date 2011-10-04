@@ -35,11 +35,12 @@ sub _request {
   }
   $url = $url->query({key => $key});
 
-  my $json = $ua->get($url)->res->json;
+  my $tx = $ua->get($url);
+  $tx->success and return $tx->res->json;
 
-  die $json->{error}->{message} unless $json->{kind};
-
-  $json;
+  my ($message, $code) = $tx->error;
+  my $json_err = $tx->res->json->{error}->{message};
+  die "Error: $code $message ($json_err)";
 }
 
 sub new {
