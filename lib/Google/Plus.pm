@@ -17,6 +17,8 @@ our %API = (
   activity   => '/activities/ID'
 );
 
+# transform our api dispatch above into an HTTPS request
+# returns JSON decoded result or throws exception otherwise
 sub _request {
   my ($self, $api, $id, $args) = @_;
 
@@ -45,6 +47,7 @@ sub _request {
   my $tx = $ua->get($url);
   $tx->success and return $tx->res->json;
 
+  # we never get here, unless something went wrong
   my $message = $tx->error;
   $tx->res->json and do {
     my $json_err = $tx->res->json->{error}->{message};
