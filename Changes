@@ -4,6 +4,7 @@ Revision history for Google::Plus
         Refactoring release
         Perldoc and dist.ini minor fixes
         Use an HTTP/HTTPS proxy when available
+        Support requesting partial responses
 
 0.003   2011-09-26
         Add tests and fixes
