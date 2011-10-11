@@ -68,16 +68,18 @@ sub new {
 }
 
 sub person {
-  my ($self, $user_id) = @_;
+  my ($self, $user_id, $fields) = @_;
 
   croak 'user ID required' unless $user_id;
   croak 'Invalid user ID' unless $user_id =~ /[0-9]+/;
 
-  $self->_request($API{person} => $user_id);
+  $fields
+    ? $self->_request($API{person} => $user_id, {fields => $fields})
+    : $self->_request($API{person} => $user_id);
 }
 
 sub activities {
-  my ($self, $user_id, $collection, $next) = @_;
+  my ($self, $user_id, $collection, $next, $fields) = @_;
 
   croak 'user ID required' unless $user_id;
   croak 'Invalid user ID' unless $user_id =~ /[0-9]+/;
@@ -85,18 +87,21 @@ sub activities {
   $collection //= 'public';
 
   my %args = (collection => $collection);
-  $args{pageToken} = $next if $next;
+  $args{pageToken} = $next   if $next;
+  $args{fields}    = $fields if $fields;
 
   $self->_request($API{activities} => $user_id, \%args);
 }
 
 sub activity {
-  my ($self, $activity_id) = @_;
+  my ($self, $activity_id, $fields) = @_;
 
   croak 'activity ID required' unless $activity_id;
   croak 'Invalid activity ID' unless $activity_id =~ /\w+/;
 
-  $self->_request($API{activity} => $activity_id);
+  $fields
+    ? $self->_request($API{activity} => $activity_id, {fields => $fields})
+    : $self->_request($API{activity} => $activity_id);
 }
 
 "Inspired by tempire's Google::Voice :3";
@@ -176,32 +181,39 @@ which you can get at L<https://code.google.com/apis/console>.
 =head2 C<person>
 
   my $person = $plus->person('userId');
+  my $person = $plus->person('userId', 'fields');
 
 Get a Google+ person's public profile.  Returns a L<Mojo::JSON> decoded
 hashref describing the person's profile in L<Portable
-Contacts|http://portablecontacts.net/draft-spec.html> format.
+Contacts|http://portablecontacts.net/draft-spec.html> format.  If
+C<fields> is given, limit response to the specified fields; see the
+Partial Responses section of L<https://developers.google.com/+/api>.
 
 =head2 C<activities>
 
   my $acts = $plus->activities('userId');
   my $acts = $plus->activities('userId', 'collection');
-  my $acts = $plus->activities('userId', 'collection', nextPageToken');
+  my $acts = $plus->activities('userId', 'collection', nextPage');
+  my $acts = $plus->activities('userId', 'collection', nextPage', 'fields');
 
 Get person's list of public activities, returning a L<Mojo::JSON>
 decoded hashref describing the person's activities in L<Activity
-Streams|http://activitystrea.ms/specs/json/1.0> format.  If
+Streams|http://activitystrea.ms/specs/json/1.0> format; this method also
+accepts requesting partial responses if C<fields> is given.  If
 C<collection> is given, use that as the collection of activities to
-list; the default is to list C<public> activities instead.  If
-C<nextPageToken> is given, this method retrieves the next page of
+list; the default is to list C<public> activities instead.  If a
+C<nextPage> token is given, this method retrieves the next page of
 activities this person has.
 
 =head2 C<activity>
 
   my $post = $plus->activity('activityId')
+  my $post = $plus->activity('activityId', fields');
 
 Get a specific activity/post.  Returns a L<Mojo::JSON> decoded hashref
 describing the activity in L<Activity
-Streams|http://activitystrea.ms/specs/json/1.0> format.
+Streams|http://activitystrea.ms/specs/json/1.0> format.  If C<fields> is
+given, limit response to specified fields.
 
 =head1 SEE ALSO
 

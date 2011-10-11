@@ -37,7 +37,7 @@ subtest 'create object' => sub {
 
 my $person;
 subtest 'get person profile' => sub {
-  plan tests => 6;
+  plan tests => 7;
 
   can_ok $g => 'person';
 
@@ -56,11 +56,27 @@ subtest 'get person profile' => sub {
       for qw/ aboutMe displayName gender id image organizations placesLived
       tagline url urls /;
   };
+
+  subtest 'person profile partial response' => sub {
+    plan tests => 6;
+
+    my @fields = qw(displayName gender aboutMe);
+
+    my $partial = $g->person($user_id, join ',' => @fields);
+    isa_ok $partial => 'HASH', 'got partial response for person';
+
+    ok $partial->{$_}, "$_ exists in partial response" for @fields;
+
+    ok !exists $partial->{birthday}, "birthday should not be in response";
+
+    throws_ok { $g->person($user_id, 'invalid,fields') } qr/Invalid field/,
+      "partial response using invalid field names";
+  };
 };
 
 my $activities;
 subtest 'get person activities' => sub {
-  plan tests => 7;
+  plan tests => 8;
 
   can_ok $g => 'activities';
 
@@ -102,14 +118,30 @@ subtest 'get person activities' => sub {
     ok $next->{$_}, "$_ in next activity list exists"
       for qw/ id items nextLink nextPageToken selfLink title updated /;
   };
+
+  subtest 'activity list partial response' => sub {
+    plan tests => 5;
+
+    my @fields = qw(selfLink nextLink);
+
+    my $partial = $g->activities($user_id, undef, undef, join ',' => @fields);
+    isa_ok $partial => 'HASH', 'got partial response for activity list';
+
+    ok $partial->{$_}, "$_ exists in partial response" for @fields;
+
+    ok !exists $partial->{title}, "title should not be in response";
+
+    throws_ok { $g->activities($user_id, undef, undef, 'invalid,fields') }
+    qr/Invalid field/, "partial response using invalid field names";
+  };
 };
+
+# Google+ is the _vehicle_, Google Hangouts is the _product_.
+my $post = 'z13uxtsawqqwwbcjt04cdhsxcnfyir44xeg';
 
 my $activity;
 subtest 'get activity' => sub {
-  plan tests => 6;
-
-  # Google+ is the _vehicle_, Google Hangouts is the _product_.
-  my $post = 'z13uxtsawqqwwbcjt04cdhsxcnfyir44xeg';
+  plan tests => 7;
 
   can_ok $g => 'activity';
 
@@ -127,5 +159,23 @@ subtest 'get activity' => sub {
     ok $activity->{$_}, "activity property $_ exists"
       for qw/ access actor annotation id object published title updated
       url verb /;
+  };
+
+  subtest 'activity detail partial response' => sub {
+    plan tests => 7;
+
+    my @fields = qw(id title object url);
+
+    my $partial = $g->activity($post, join ',' => @fields);
+    isa_ok $partial => 'HASH', 'got partial response for activity';
+
+    ok $partial->{$_}, "$_ exists in partial response" for @fields;
+
+    ok !exists $partial->{updated},
+      'updated property should not be in response';
+
+    # Google throws a 404 here unlike when requesting other partials
+    throws_ok { $g->activities($post, 'invalid,fields') } qr/Not Found/,
+      "partial response using invalid field names";
   };
 };
