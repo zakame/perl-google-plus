@@ -193,8 +193,8 @@ Partial Responses section of L<https://developers.google.com/+/api>.
 
   my $acts = $plus->activities('userId');
   my $acts = $plus->activities('userId', 'collection');
-  my $acts = $plus->activities('userId', 'collection', nextPage');
-  my $acts = $plus->activities('userId', 'collection', nextPage', 'fields');
+  my $acts = $plus->activities('userId', 'collection', 'nextPage');
+  my $acts = $plus->activities('userId', 'collection', 'nextPage', 'fields');
 
 Get person's list of public activities, returning a L<Mojo::JSON>
 decoded hashref describing the person's activities in L<Activity
@@ -208,7 +208,7 @@ activities this person has.
 =head2 C<activity>
 
   my $post = $plus->activity('activityId')
-  my $post = $plus->activity('activityId', fields');
+  my $post = $plus->activity('activityId', 'fields');
 
 Get a specific activity/post.  Returns a L<Mojo::JSON> decoded hashref
 describing the activity in L<Activity
