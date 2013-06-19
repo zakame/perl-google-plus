@@ -43,8 +43,8 @@ subtest 'get person profile' => sub {
 
   throws_ok { $g->person } qr/ID.+required/, 'needs user ID';
   throws_ok { $g->person('foo') } qr/Invalid/, 'user ID must be numeric';
-  throws_ok { $g->person('00000000000000000000') } qr/unable to map/,
-    'bad person';
+  throws_ok { $g->person('00000000000000000000') } qr/Not Found/,
+    'person not found';
 
   $person = $g->person($user_id);
   isa_ok $person => 'HASH';
@@ -82,8 +82,8 @@ subtest 'get person activities' => sub {
 
   throws_ok { $g->activities } qr/ID.+required/, 'needs user ID';
   throws_ok { $g->activities('foo') } qr/Invalid/, 'user ID must be numeric';
-  throws_ok { $g->activities('00000000000000000000') } qr/unable to map/,
-    'bad person';
+  throws_ok { $g->activities('00000000000000000000') } qr/Not Found/,
+    'person not found (to get activity list from)';
 
   subtest 'get person activities per collection' => sub {
     plan tests => 3;
@@ -102,37 +102,37 @@ subtest 'get person activities' => sub {
   };
 
   subtest 'activity list properties' => sub {
-    plan tests => 7;
+    plan tests => 4;
 
     ok $activities->{$_}, "$_ in activity list exists"
-      for qw/ id items nextLink nextPageToken selfLink title updated /;
+      for qw/ items nextPageToken title updated /;
   };
 
   subtest 'next activity list' => sub {
-    plan tests => 8;
+    plan tests => 5;
 
     my $next =
       $g->activities($user_id => 'public', $activities->{nextPageToken});
     isnt $next->{nextPageToken}, $activities->{nextPageToken},
       'got new activity list (the next page)';
     ok $next->{$_}, "$_ in next activity list exists"
-      for qw/ id items nextLink nextPageToken selfLink title updated /;
+      for qw/ items nextPageToken title updated /;
   };
 
   subtest 'activity list partial response' => sub {
     plan tests => 5;
 
-    my @fields = qw(selfLink nextLink);
+    my @fields = qw(title updated);
 
     my $partial = $g->activities($user_id, undef, undef, join ',' => @fields);
     isa_ok $partial => 'HASH', 'got partial response for activity list';
 
     ok $partial->{$_}, "$_ exists in partial response" for @fields;
 
-    ok !exists $partial->{title}, "title should not be in response";
+    ok !exists $partial->{items}, "items should not be in response";
 
     throws_ok { $g->activities($user_id, undef, undef, 'invalid,fields') }
-    qr/Invalid field/, "partial response using invalid field names";
+    qr/Invalid field/, "partial response using invalid field names/strings";
   };
 };
 
@@ -147,7 +147,7 @@ subtest 'get activity' => sub {
 
   throws_ok { $g->activity } qr/ID.+required/, 'needs activity ID';
   throws_ok { $g->activity('$!@$@#$') } qr/Invalid activity/, 'bad activity';
-  throws_ok { $g->activity('foobarbaz') } qr/Unable to find activity/,
+  throws_ok { $g->activity('foobarbaz') } qr/Not Found/,
     'no activity named "foobarbaz"';
 
   $activity = $g->activity($post);
@@ -175,7 +175,7 @@ subtest 'get activity' => sub {
       'updated property should not be in response';
 
     # Google throws a 404 here unlike when requesting other partials
-    throws_ok { $g->activities($post, 'invalid,fields') } qr/Not Found/,
-      "partial response using invalid field names";
+    throws_ok { $g->activities($post, 'invalid,fields') } qr/Invalid string/,
+      "partial response using invalid field names/strings";
   };
 };
