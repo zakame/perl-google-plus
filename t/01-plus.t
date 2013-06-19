@@ -8,8 +8,8 @@ BEGIN {
   plan skip_all => 'Needs Google+ API key in %ENV'
     unless $ENV{GOOGLE_PLUS_API_KEY};
 
-  my $p = Net::Ping->new('syn', 2);
-  $p->port_number(scalar getservbyname(https => 'tcp'));
+  my $p = Net::Ping->new( 'syn', 2 );
+  $p->port_number( scalar getservbyname( https => 'tcp' ) );
   $p->service_check(1);
   plan skip_all => 'Needs access to remote Google API endpoint'
     unless $p->ping('www.googleapis.com');
@@ -28,10 +28,10 @@ subtest 'create object' => sub {
 
   can_ok 'Google::Plus' => 'new';
   throws_ok { Google::Plus->new } qr/key.+required/, 'needs API key';
-  throws_ok { Google::Plus->new(blah => 'ther') } qr/key.+required/,
+  throws_ok { Google::Plus->new( blah => 'ther' ) } qr/key.+required/,
     'bad key';
 
-  $g = new_ok 'Google::Plus', [key => $ENV{GOOGLE_PLUS_API_KEY}];
+  $g = new_ok 'Google::Plus', [ key => $ENV{GOOGLE_PLUS_API_KEY} ];
   ok ref $g => 'Made object';
 };
 
@@ -62,14 +62,14 @@ subtest 'get person profile' => sub {
 
     my @fields = qw(displayName gender aboutMe);
 
-    my $partial = $g->person($user_id, join ',' => @fields);
+    my $partial = $g->person( $user_id, join ',' => @fields );
     isa_ok $partial => 'HASH', 'got partial response for person';
 
     ok $partial->{$_}, "$_ exists in partial response" for @fields;
 
     ok !exists $partial->{birthday}, "birthday should not be in response";
 
-    throws_ok { $g->person($user_id, 'invalid,fields') } qr/Invalid field/,
+    throws_ok { $g->person( $user_id, 'invalid,fields' ) } qr/Invalid field/,
       "partial response using invalid field names";
   };
 };
@@ -91,12 +91,12 @@ subtest 'get person activities' => sub {
     $activities = $g->activities($user_id);
     isa_ok $activities => 'HASH', 'get activities (default public)';
 
-    $activities = $g->activities($user_id => 'public');
+    $activities = $g->activities( $user_id => 'public' );
     isa_ok $activities => 'HASH', 'get activities (explicit public)';
 
   SKIP: {
       skip 'no custom collections for activities/list yet', 1;
-      $activities = $g->activities($user_id => 'cats');
+      $activities = $g->activities( $user_id => 'cats' );
       isa_ok $activities => 'HASH', 'get activities (custom collection)';
     }
   };
@@ -112,7 +112,7 @@ subtest 'get person activities' => sub {
     plan tests => 5;
 
     my $next =
-      $g->activities($user_id => 'public', $activities->{nextPageToken});
+      $g->activities( $user_id => 'public', $activities->{nextPageToken} );
     isnt $next->{nextPageToken}, $activities->{nextPageToken},
       'got new activity list (the next page)';
     ok $next->{$_}, "$_ in next activity list exists"
@@ -124,14 +124,14 @@ subtest 'get person activities' => sub {
 
     my @fields = qw(title updated);
 
-    my $partial = $g->activities($user_id, undef, undef, join ',' => @fields);
+    my $partial = $g->activities( $user_id, undef, undef, join ',' => @fields );
     isa_ok $partial => 'HASH', 'got partial response for activity list';
 
     ok $partial->{$_}, "$_ exists in partial response" for @fields;
 
     ok !exists $partial->{items}, "items should not be in response";
 
-    throws_ok { $g->activities($user_id, undef, undef, 'invalid,fields') }
+    throws_ok { $g->activities( $user_id, undef, undef, 'invalid,fields' ) }
     qr/Invalid field/, "partial response using invalid field names/strings";
   };
 };
@@ -166,7 +166,7 @@ subtest 'get activity' => sub {
 
     my @fields = qw(id title object url);
 
-    my $partial = $g->activity($post, join ',' => @fields);
+    my $partial = $g->activity( $post, join ',' => @fields );
     isa_ok $partial => 'HASH', 'got partial response for activity';
 
     ok $partial->{$_}, "$_ exists in partial response" for @fields;
@@ -175,7 +175,7 @@ subtest 'get activity' => sub {
       'updated property should not be in response';
 
     # Google throws a 404 here unlike when requesting other partials
-    throws_ok { $g->activities($post, 'invalid,fields') } qr/Invalid string/,
+    throws_ok { $g->activities( $post, 'invalid,fields' ) } qr/Invalid string/,
       "partial response using invalid field names/strings";
   };
 };

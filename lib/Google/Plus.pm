@@ -20,29 +20,29 @@ our %API = (
 # transform our api dispatch above into an HTTPS request
 # returns JSON decoded result or throws exception otherwise
 sub _request {
-  my ($self, $api, $id, $args) = @_;
+  my ( $self, $api, $id, $args ) = @_;
 
   my $key = $self->key;
   my $ua  = $self->ua;
 
   $api =~ s/ID/$id/;
 
-  my $url = Mojo::URL->new(join '', $service => $api);
+  my $url = Mojo::URL->new( join '', $service => $api );
 
   # $args is a hashref corresponding to optional query parameters (such
   # as nextPageToken)
-  if (ref $args eq 'HASH') {
-  PARAM: while (my ($k, $v) = each %$args) {
+  if ( ref $args eq 'HASH' ) {
+  PARAM: while ( my ( $k, $v ) = each %$args ) {
       $k eq 'collection' and do {
         my $p = $url->path->to_string;
         $p =~ s/COLLECTION/$v/;
         $url = $url->path($p);
         next PARAM;
       };
-      $url = $url->query({$k => $v});
+      $url = $url->query( { $k => $v } );
     }
   }
-  $url = $url->query({key => $key});
+  $url = $url->query( { key => $key } );
 
   my $tx = $ua->get($url);
   $tx->success and return $tx->res->json;
@@ -61,47 +61,47 @@ sub new {
 
   croak "API key required" unless $_[0] and $_[0] eq 'key';
 
-  $self->key($_[1]);
-  $self->ua(Mojo::UserAgent->new->detect_proxy);
+  $self->key( $_[1] );
+  $self->ua( Mojo::UserAgent->new->detect_proxy );
 
   $self;
 }
 
 sub person {
-  my ($self, $user_id, $fields) = @_;
+  my ( $self, $user_id, $fields ) = @_;
 
   croak 'user ID required' unless $user_id;
-  croak 'Invalid user ID' unless $user_id =~ /[0-9]+/;
+  croak 'Invalid user ID'  unless $user_id =~ /[0-9]+/;
 
   $fields
-    ? $self->_request($API{person} => $user_id, {fields => $fields})
-    : $self->_request($API{person} => $user_id);
+    ? $self->_request( $API{person} => $user_id, { fields => $fields } )
+    : $self->_request( $API{person} => $user_id );
 }
 
 sub activities {
-  my ($self, $user_id, $collection, $next, $fields) = @_;
+  my ( $self, $user_id, $collection, $next, $fields ) = @_;
 
   croak 'user ID required' unless $user_id;
-  croak 'Invalid user ID' unless $user_id =~ /[0-9]+/;
+  croak 'Invalid user ID'  unless $user_id =~ /[0-9]+/;
 
   $collection //= 'public';
 
-  my %args = (collection => $collection);
+  my %args = ( collection => $collection );
   $args{pageToken} = $next   if $next;
   $args{fields}    = $fields if $fields;
 
-  $self->_request($API{activities} => $user_id, \%args);
+  $self->_request( $API{activities} => $user_id, \%args );
 }
 
 sub activity {
-  my ($self, $activity_id, $fields) = @_;
+  my ( $self, $activity_id, $fields ) = @_;
 
   croak 'activity ID required' unless $activity_id;
-  croak 'Invalid activity ID' unless $activity_id =~ /\w+/;
+  croak 'Invalid activity ID'  unless $activity_id =~ /\w+/;
 
   $fields
-    ? $self->_request($API{activity} => $activity_id, {fields => $fields})
-    : $self->_request($API{activity} => $activity_id);
+    ? $self->_request( $API{activity} => $activity_id, { fields => $fields } )
+    : $self->_request( $API{activity} => $activity_id );
 }
 
 "Inspired by tempire's Google::Voice :3";
